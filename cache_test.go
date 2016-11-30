@@ -1224,12 +1224,74 @@ func TestDecrementUnderflowUint(t *testing.T) {
 	tc.Set("uint8", uint8(0), DefaultExpiration)
 	err := tc.Decrement("uint8", 1)
 	if err != nil {
-		t.Error("Error decrementing int8:", err)
+		t.Error("Error decrementing uint8:", err)
 	}
 	x, _ := tc.Get("uint8")
 	uint8 := x.(uint8)
 	if uint8 != 255 {
 		t.Error("uint8 did not underflow as expected; value:", uint8)
+	}
+	// if uint8 != 0 {
+	// 	t.Error("uint8 was not capped at 0; value:", uint8)
+	// }
+}
+
+func TestDecrementUint8Underflow(t *testing.T) {
+	tc := New(DefaultExpiration, 0)
+	tc.Set("uint8", uint8(0), DefaultExpiration)
+	_, err := tc.DecrementUint8("uint8", 1)
+	if err != nil {
+		t.Error("Error decrementing uint8:", err)
+	}
+	x, _ := tc.Get("uint8")
+	uint8 := x.(uint8)
+	// if uint8 != 255 {
+	// 	t.Error("uint8 did not underflow as expected; value:", uint8)
+	// }
+	if uint8 != 0 {
+		t.Error("uint8 was not capped at 0; value:", uint8)
+	}
+}
+
+func TestDecrementUint16Underflow(t *testing.T) {
+	tc := New(DefaultExpiration, 0)
+	tc.Set("uint16", uint16(0), DefaultExpiration)
+	_, err := tc.DecrementUint16("uint16", 1)
+	if err != nil {
+		t.Error("Error decrementing uint16:", err)
+	}
+	x, _ := tc.Get("uint16")
+	uint16 := x.(uint16)
+	if uint16 != 0 {
+		t.Error("uint16 was not capped at 0; value:", uint16)
+	}
+}
+
+func TestDecrementUint32Underflow(t *testing.T) {
+	tc := New(DefaultExpiration, 0)
+	tc.Set("uint32", uint32(0), DefaultExpiration)
+	_, err := tc.DecrementUint32("uint32", 1)
+	if err != nil {
+		t.Error("Error decrementing uint32:", err)
+	}
+	x, _ := tc.Get("uint32")
+	uint32 := x.(uint32)
+	if uint32 != 0 {
+		t.Error("uint32 was not capped at 0; value:", uint32)
+	}
+}
+
+func TestDecrementUint64Underflow(t *testing.T) {
+	tc := New(DefaultExpiration, 0)
+	tc.Set("uint64", uint64(0), DefaultExpiration)
+	_, err := tc.DecrementUint64("uint64", 1)
+	if err != nil {
+		t.Error("Error decrementing uint64:", err)
+	}
+	x, _ := tc.Get("uint64")
+	uint64 := x.(uint64)
+	if uint64 != 0 {
+		t.Error("uint64 was not capped at 0; value:", uint64)
 	}
 }
 
