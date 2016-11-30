@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/axiomzen/go-cache.svg?branch=master)](https://travis-ci.org/axiomzen/go-cache)
+[![Coverage Status](https://coveralls.io/repos/github/axiomzen/go-cache/badge.svg?branch=master)](https://coveralls.io/github/axiomzen/go-cache?branch=master)
+
 # go-cache
 
 go-cache is an in-memory key:value store/cache similar to memcached that is
