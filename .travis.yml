@@ -1,16 +1,25 @@
 language: go
 
 go:
- - 1.7
- - tip
+  - 1.7
+  - tip
+
+matrix:
+  fast_finish: true
 
 before_install:
- - go get github.com/golang/lint/golint
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/golang/lint/golint
+  - go get github.com/mattn/goveralls
 
 install:
- - go get -d -v ./... && go build -v ./...
+  - go get -d -v ./... && go build -v ./...
 
 script:
- - $HOME/gopath/bin/golint ./...
- - go vet ./...
- - go test -v -race ./...
+  - go vet -x ./...
+  - $HOME/gopath/bin/golint ./...
+  - go test -v -race ./...
+  - go test -covermode=count -coverprofile=profile.cov .
+
+after_script:
+  - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci
