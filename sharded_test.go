@@ -73,6 +73,7 @@ func benchmarkShardedCacheGetManyConcurrent(b *testing.B, exp time.Duration) {
 	wg := new(sync.WaitGroup)
 	wg.Add(n)
 	for _, v := range keys {
+		v := v
 		go func() {
 			for j := 0; j < each; j++ {
 				tsc.Get(v)

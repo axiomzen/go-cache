@@ -1,5 +1,10 @@
 language: go
 
 go:
-  - 1.7
-  - tip
+ - 1.7
+ - tip
+
+script:
+ - golint ./...
+ - go vet ./...
+ - go test -v ./...
