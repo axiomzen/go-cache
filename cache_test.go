@@ -1140,13 +1140,22 @@ func TestReplace(t *testing.T) {
 func TestDelete(t *testing.T) {
 	tc := New(DefaultExpiration, 0)
 	tc.Set("foo", "bar", DefaultExpiration)
-	tc.Delete("foo")
+	evicted := tc.Delete("foo")
+	if !evicted {
+		t.Error("foo should have been evicted")
+	}
+	//
 	x, found := tc.Get("foo")
 	if found {
 		t.Error("foo was found, but it should have been deleted")
 	}
 	if x != nil {
 		t.Error("x is not nil:", x)
+	}
+	evicted = tc.Delete("bar")
+
+	if evicted {
+		t.Error("bar should not have been evicted")
 	}
 }
 
@@ -1459,7 +1468,7 @@ func BenchmarkRWMutexMapGet(b *testing.B) {
 
 func BenchmarkRWMutexInterfaceMapGetStruct(b *testing.B) {
 	b.StopTimer()
-	s := struct{name string}{name: "foo"}
+	s := struct{ name string }{name: "foo"}
 	m := map[interface{}]string{
 		s: "bar",
 	}

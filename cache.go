@@ -10,12 +10,20 @@ import (
 	"time"
 )
 
+var (
+	// ErrKeyExists is the error for when something already exists
+	ErrKeyExists = fmt.Errorf("item already exists")
+	// ErrCacheMiss is when for something doesn't exist
+	ErrCacheMiss = fmt.Errorf("item not found")
+)
+
+// Item is the unit of storage
 type Item struct {
 	Object     interface{}
 	Expiration int64
 }
 
-// Returns true if the item has expired.
+// Expired returns true if the item has expired.
 func (item Item) Expired() bool {
 	if item.Expiration == 0 {
 		return false
@@ -24,14 +32,15 @@ func (item Item) Expired() bool {
 }
 
 const (
-	// For use with functions that take an expiration time.
+	// NoExpiration for use with functions that take an expiration time.
 	NoExpiration time.Duration = -1
-	// For use with functions that take an expiration time. Equivalent to
+	// DefaultExpiration for use with functions that take an expiration time. Equivalent to
 	// passing in the same expiration duration as was given to New() or
 	// NewFrom() when the cache was created (e.g. 5 minutes.)
 	DefaultExpiration time.Duration = 0
 )
 
+// Cache is the main cache structure
 type Cache struct {
 	*cache
 	// If this is confusing, see the comment at the bottom of New()
@@ -45,7 +54,7 @@ type cache struct {
 	janitor           *janitor
 }
 
-// Add an item to the cache, replacing any existing item. If the duration is 0
+// Set inserts an item to the cache, replacing any existing item. If the duration is 0
 // (DefaultExpiration), the cache's default expiration time is used. If it is -1
 // (NoExpiration), the item never expires.
 func (c *cache) Set(k string, x interface{}, d time.Duration) {
@@ -81,7 +90,7 @@ func (c *cache) set(k string, x interface{}, d time.Duration) {
 	}
 }
 
-// Add an item to the cache, replacing any existing item, using the default
+// SetDefault inserts an item to the cache, replacing any existing item, using the default
 // expiration.
 func (c *cache) SetDefault(k string, x interface{}) {
 	c.Set(k, x, DefaultExpiration)
@@ -94,14 +103,15 @@ func (c *cache) Add(k string, x interface{}, d time.Duration) error {
 	_, found := c.get(k)
 	if found {
 		c.mu.Unlock()
-		return fmt.Errorf("Item %s already exists", k)
+		//return fmt.Errorf("Item %s already exists", k)
+		return ErrKeyExists
 	}
 	c.set(k, x, d)
 	c.mu.Unlock()
 	return nil
 }
 
-// Set a new value for the cache key only if it already exists, and the existing
+// Replace set a new value for the cache key only if it already exists, and the existing
 // item hasn't expired. Returns an error otherwise.
 func (c *cache) Replace(k string, x interface{}, d time.Duration) error {
 	c.mu.Lock()
@@ -159,7 +169,8 @@ func (c *cache) Increment(k string, n int64) error {
 	v, found := c.items[k]
 	if !found || v.Expired() {
 		c.mu.Unlock()
-		return fmt.Errorf("Item %s not found", k)
+		//return fmt.Errorf("Item %s not found", k)
+		return ErrCacheMiss
 	}
 	switch v.Object.(type) {
 	case int:
@@ -521,7 +532,8 @@ func (c *cache) Decrement(k string, n int64) error {
 	v, found := c.items[k]
 	if !found || v.Expired() {
 		c.mu.Unlock()
-		return fmt.Errorf("Item not found")
+		//return fmt.Errorf("Item not found")
+		return ErrCacheMiss
 	}
 	switch v.Object.(type) {
 	case int:
@@ -872,13 +884,15 @@ func (c *cache) DecrementFloat64(k string, n float64) (float64, error) {
 }
 
 // Delete an item from the cache. Does nothing if the key is not in the cache.
-func (c *cache) Delete(k string) {
+func (c *cache) Delete(k string) bool {
 	c.mu.Lock()
+	_, found := c.get(k)
 	v, evicted := c.delete(k)
 	c.mu.Unlock()
 	if evicted {
 		c.onEvicted(k, v)
 	}
+	return found
 }
 
 func (c *cache) delete(k string) (interface{}, bool) {
